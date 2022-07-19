@@ -263,6 +263,36 @@ echo ""
 		EXP="$(chage -l $CLIENT | grep "Account expires" | awk -F": " '{print $2}')"
 		echo -e "$PASSWORD\n$PASSWORD\n"|passwd $CLIENT &> /dev/null
 
+newclient () {
+	# Generates the custom client.ovpn
+	cp /etc/openvpn/client-common.txt ~/$1.ovpn
+	echo "<ca>" >> ~/$1.ovpn
+	cat /etc/openvpn/easy-rsa/pki/ca.crt >> ~/$1.ovpn
+	echo "</ca>" >> ~/$1.ovpn
+	echo "<cert>" >> ~/$1.ovpn
+	sed -ne '/BEGIN CERTIFICATE/,$ p' /etc/openvpn/easy-rsa/pki/issued/$1.crt >> ~/$1.ovpn
+	echo "</cert>" >> ~/$1.ovpn
+	echo "<key>" >> ~/$1.ovpn
+	cat /etc/openvpn/easy-rsa/pki/private/$1.key >> ~/$1.ovpn
+	echo "</key>" >> ~/$1.ovpn
+	echo "<tls-auth>" >> ~/$1.ovpn
+	sed -ne '/BEGIN OpenVPN Static key/,$ p' /etc/openvpn/ta.key >> ~/$1.ovpn
+	echo "</tls-auth>" >> ~/$1.ovpn
+}
+
+	RANDOMFOLDER=$(cat /dev/urandom | tr -dc 'a-zA-Z' | fold -w 4 | head -n 1)
+	mkdir /home/vps/public_html/$RANDOMFOLDER
+	cd /etc/openvpn/easy-rsa/
+	./easyrsa build-client-full $CLIENT nopass
+	newclient "$CLIENT"
+	cp /root/$CLIENT.ovpn /home/vps/public_html/$RANDOMFOLDER/$CLIENT.ovpn
+	rm -f /root/$CLIENT.ovpn
+	useradd -e `date -d "$TimeActive days" +"%Y-%m-%d"` -s /bin/false -M $CLIENT
+	EXP="$(chage -l $CLIENT | grep "Account expires" | awk -F": " '{print $2}')"
+	echo -e "$CLIENT\n$CLIENT\n"|passwd $CLIENT &> /dev/null
+
+
+
 		clear
 		echo ""
 		echo "ชื่อบัญชี : $CLIENT"
@@ -272,6 +302,8 @@ echo ""
 		echo "IP   : $IP"
 		echo "Port : 22"
 		echo "Proxy Port : $PROXY"
+                echo ""
+	        echo "ดาวน์โหลดคอนฟิก : http://$IP/$RANDOMFOLDER/$CLIENT.ovpn "
 		exit
 	else
 		echo ""
