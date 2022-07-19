@@ -6,7 +6,7 @@
 - sudo apt upgrade
 - reboot
 - sudo -i
-- wget https://raw.githubusercontent.com/MyGatherBk/MyAuto/master/Install1
+- wget https://raw.githubusercontent.com/GunGZN/MyAuto/master/Install1
 - chmod +x Install1
 - ./Install1
 - ติดตั้งเสร็จ พิมพ์ m
